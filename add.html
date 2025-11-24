@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <meta name="theme-color" content="#0ea5a4"/>
+  <title>UniTimetable — Add Class</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="container">
+    <header class="topbar">
+      <a href="index.html" class="brand">Home</a>
+      <a href="timetable.html" class="btn">Timetable</a>
+    </header>
+
+    <section class="card form-card">
+      <h2 id="form-title">Add Class</h2>
+      <form id="class-form">
+        <label>Unit name
+          <input id="unit" required autocomplete="off" />
+        </label>
+        <label>Lecturer's name
+          <input id="lecturer" autocomplete="off" />
+        </label>
+        <label>Day
+          <select id="day">
+            <option value="1">Monday</option>
+            <option value="2">Tuesday</option>
+            <option value="3">Wednesday</option>
+            <option value="4">Thursday</option>
+            <option value="5">Friday</option>
+            <option value="6">Saturday</option>
+            <option value="0">Sunday</option>
+          </select>
+        </label>
+        <div class="time-row">
+          <label>Start <input id="startTime" type="time" required /></label>
+          <label>End <input id="endTime" type="time" required /></label>
+        </div>
+        <label>Venue
+          <input id="venue" />
+        </label>
+        <label>Reminder before class
+          <select id="reminder">
+            <option value="5">5 min</option>
+            <option value="10" selected>10 min</option>
+            <option value="20">20 min</option>
+            <option value="30">30 min</option>
+            <option value="60">1 hour</option>
+          </select>
+        </label>
+        <label>Notes (quick)
+          <textarea id="notes" rows="4" placeholder="Auto-saved notes for this class"></textarea>
+        </label>
+
+        <div class="form-actions">
+          <button type="submit" class="btn primary">Save</button>
+          <a href="index.html" class="btn">Cancel</a>
+        </div>
+        <input type="hidden" id="editId" />
+      </form>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      await appInit();
+      // fill form if editing (query param ?id=)
+      const params = new URLSearchParams(location.search);
+      const id = params.get('id');
+      if(id){
+        document.getElementById('form-title').textContent = 'Edit Class';
+        const entry = appGetClassById(id);
+        if(entry){
+          document.getElementById('unit').value = entry.unit;
+          document.getElementById('lecturer').value = entry.lecturer || '';
+          document.getElementById('day').value = entry.day;
+          document.getElementById('startTime').value = entry.startTime;
+          document.getElementById('endTime').value = entry.endTime;
+          document.getElementById('venue').value = entry.venue || '';
+          document.getElementById('reminder').value = entry.reminder || 10;
+          document.getElementById('notes').value = entry.notes || '';
+          document.getElementById('editId').value = id;
+        }
+      }
+
+      // auto-save notes while typing for existing entry
+      const notesEl = document.getElementById('notes');
+      notesEl.addEventListener('input', () => {
+        const id = document.getElementById('editId').value;
+        if(!id) return;
+        appUpdateNotes(id, notesEl.value);
+      });
+
+      document.getElementById('class-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const payload = {
+          unit: document.getElementById('unit').value.trim(),
+          lecturer: document.getElementById('lecturer').value.trim(),
+          day: Number(document.getElementById('day').value),
+          startTime: document.getElementById('startTime').value,
+          endTime: document.getElementById('endTime').value,
+          venue: document.getElementById('venue').value.trim(),
+          reminder: Number(document.getElementById('reminder').value),
+          notes: document.getElementById('notes').value || ''
+        };
+        const editId = document.getElementById('editId').value;
+        if(editId){
+          appUpdateClass(editId, payload);
+        } else {
+          appAddClass(payload);
+        }
+        location.href = 'index.html';
+      });
+    });
+  </script>
+</body>
+</html>

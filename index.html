@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <meta name="theme-color" content="#0ea5a4"/>
+  <title>UniTimetable — Home</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="container">
+    <header class="topbar">
+      <h1 class="brand">UniTimetable</h1>
+      <nav class="mini-nav">
+        <a href="add.html" class="btn primary">+ Add</a>
+        <a href="timetable.html" class="btn">Timetable</a>
+      </nav>
+    </header>
+
+    <section class="card dashboard" id="today-card">
+      <h2>Today's classes</h2>
+      <div id="today-list"></div>
+      <p id="no-today" class="muted">No classes today — add one.</p>
+    </section>
+
+    <section class="card small" id="next-card">
+      <h3>Next</h3>
+      <p id="next-info">—</p>
+    </section>
+
+    <section class="card actions">
+      <a href="courses.html" class="list-link">Course list</a>
+      <a href="notes.html" class="list-link">All notes</a>
+    </section>
+
+    <footer class="card small muted">
+  <p>Install the app and allow notifications for reminders (best on Android).</p>
+  <button id="installBtn" class="btn primary" style="margin-top:10px; width:100%; display:none;">
+    Install App
+  </button>
+  <p id="install-msg" class="muted"></p>
+
+</footer>
+
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    // page-specific init
+    document.addEventListener('DOMContentLoaded', async () => {
+      await appInit(); // ensure app.js sets up
+      renderToday();    // render home-specific UI
+    });
+  </script>
+</body>
+</html>

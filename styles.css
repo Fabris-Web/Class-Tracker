@@ -1,0 +1,84 @@
+:root{
+  --bg:#071226;
+  --card:#0b1220;
+  --muted:#94a3b8;
+  --accent:#0ea5a4;
+  --glass: rgba(255,255,255,0.03);
+  --danger:#ef4444;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  color:#e6eef8;
+  background: linear-gradient(180deg,#071226,#031021);
+  -webkit-font-smoothing:antialiased;
+  padding:12px;
+  font-size:15px;
+}
+.container{
+  max-width:480px;
+  margin:0 auto;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  padding-bottom:56px;
+}
+.topbar{display:flex;justify-content:space-between;align-items:center}
+.brand{color:var(--accent);font-weight:700;text-decoration:none;font-size:18px}
+.mini-nav a{margin-left:8px}
+.card{
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  padding:12px;border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,0.6);
+}
+.dashboard h2{margin:0 0 8px 0}
+.muted{color:var(--muted)}
+.btn{
+  border:0;padding:8px 12px;border-radius:10px;background:transparent;color:inherit;cursor:pointer;font-weight:700;text-decoration:none;
+}
+.btn.primary{background:linear-gradient(90deg,var(--accent),#06b6b4);color:#042022}
+.actions .list-link{display:block;padding:12px 0;text-decoration:none;color:var(--accent)}
+.small{font-size:13px}
+.time-row{display:flex;gap:8px}
+.time-row label{flex:1}
+.class-card{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px;border-radius:10px;margin-bottom:8px;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent)}
+.class-title{font-weight:700}
+.class-meta{font-size:13px;color:var(--muted)}
+.small-text{font-size:13px;color:var(--muted)}
+.course-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.course-actions a{margin-left:6px}
+.actions-col{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.danger{background:var(--danger);color:#fff;padding:6px 8px;border-radius:8px}
+.form-card label{display:block;margin-bottom:8px;font-size:13px;color:var(--muted)}
+input,select,textarea{width:100%;padding:10px;border-radius:8px;border:0;background:rgba(255,255,255,0.02);color:inherit;outline:2px solid transparent}
+.form-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
+@media (min-width:520px){body{padding:20px}}
+/* utility */
+.hidden{display:none}
+
+/* Install button gradient + pulse animation */
+#installBtn {
+  background: linear-gradient(135deg, #0ea5a4, #06b6b4);
+  color: #042022;
+  font-weight: 700;
+  border: none;
+  padding: 12px;
+  border-radius: 12px;
+  width: 100%;
+  font-size: 15px;
+  animation: pulseInstall 2.4s infinite ease-in-out;
+  transition: opacity .3s;
+}
+
+@keyframes pulseInstall {
+  0% { box-shadow: 0 0 0 0 rgba(14,165,164,0.45); }
+  70% { box-shadow: 0 0 0 12px rgba(14,165,164,0); }
+  100% { box-shadow: 0 0 0 0 rgba(14,165,164,0); }
+}
+
+/* When installed, we fade it out before hiding */
+#installBtn.installed {
+  animation: none;
+  opacity: 0.3;
+}

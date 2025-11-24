@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <meta name="theme-color" content="#0ea5a4"/>
+  <title>UniTimetable — Timetable</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="container">
+    <header class="topbar">
+      <a href="index.html" class="brand">Home</a>
+      <a href="add.html" class="btn primary">+ Add</a>
+    </header>
+
+    <section class="card">
+      <h2>All Classes</h2>
+      <div id="tt-list"></div>
+      <p id="no-classes" class="muted">No classes saved yet.</p>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      await appInit();
+      const params = new URLSearchParams(location.search);
+      const unit = params.get('unit'); // check if a specific unit is requested
+      renderTimetable(unit);
+    });
+
+    function renderTimetable(unitFilter = null){
+      const listEl = document.getElementById('tt-list');
+      listEl.innerHTML = '';
+
+      // Fetch either all classes or only for the specified unit
+      const classes = unitFilter ? appGetClassesForUnit(unitFilter) : appGetAllClassesSorted();
+
+      if(classes.length === 0){
+        document.getElementById('no-classes').style.display = 'block';
+        return;
+      } else document.getElementById('no-classes').style.display = 'none';
+
+      for(const c of classes){
+        const card = document.createElement('article');
+        card.className = 'class-card';
+        card.innerHTML = `
+          <div>
+            <div class="class-title">${escapeHtml(c.unit)}</div>
+            <div class="class-meta">${dayShort(c.day)} · ${niceTime(c.startTime)} — ${niceTime(c.endTime)}</div>
+            <div class="class-sub small-text">${escapeHtml(c.lecturer || '')} ${c.venue ? '· ' + escapeHtml(c.venue) : ''}</div>
+          </div>
+          <div class="actions-col">
+            <a class="btn small" href="add.html?id=${c.id}">Edit</a>
+            <a class="btn small" href="notes.html?unit=${encodeURIComponent(c.unit)}">Notes</a>
+            <button class="btn small danger" data-id="${c.id}">Delete</button>
+          </div>
+        `;
+        listEl.appendChild(card);
+
+        card.querySelector('button[data-id]').addEventListener('click', () => {
+          if(confirm('Delete this class?')){
+            appDeleteClass(c.id);
+            renderTimetable(unitFilter); // re-render with same filter
+          }
+        });
+      }
+
+      // Update the header if viewing a single unit
+      const titleEl = document.querySelector('h2');
+      if(unitFilter && titleEl){
+        titleEl.textContent = `Classes — ${unitFilter}`;
+      }
+    }
+  </script>
+</body>
+</html>
