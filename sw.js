@@ -1,12 +1,20 @@
 /* sw.js */
-const CACHE_NAME = 'unit-timetable-cache-v1';
+const CACHE_NAME = 'unit-timetable-cache-v3';
+
 const ASSETS = [
   '/',
   '/index.html',
+
+  // Add both HTML and extensionless routes
+  '/add',
   '/add.html',
+  '/timetable',
   '/timetable.html',
+  '/courses',
   '/courses.html',
+  '/notes',
   '/notes.html',
+
   '/styles.css',
   '/app.js',
   '/manifest.json',
@@ -14,28 +22,70 @@ const ASSETS = [
   '/icons/icon-512.png'
 ];
 
-self.addEventListener('install', e => {
+self.addEventListener('install', event => {
   self.skipWaiting();
-  e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(ASSETS)).catch(()=>{}));
-});
-
-self.addEventListener('activate', e => { e.waitUntil(self.clients.claim()); });
-
-self.addEventListener('fetch', e => {
-  const req = e.request;
-  e.respondWith(
-    caches.match(req).then(cached => {
-      return cached || fetch(req).then(res=>{
-        if(req.method === 'GET' && res && res.status === 200){
-          caches.open(CACHE_NAME).then(cache => cache.put(req, res.clone()));
-        }
-        return res;
-      }).catch(()=> cached);
-    })
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(ASSETS))
+      .catch(() => {})
   );
 });
 
-// The SW cannot access localStorage; ask a client to provide timetable via MessageChannel
+self.addEventListener('activate', event => {
+  event.waitUntil(self.clients.claim());
+});
+
+/* ===============================
+   FETCH HANDLER WITH FALLBACK FIX
+   =============================== */
+self.addEventListener('fetch', event => {
+  const req = event.request;
+  const url = new URL(req.url);
+
+  // ✔ Handle navigation requests (when user clicks a link)
+  if (req.mode === 'navigate') {
+    // Try extensionless → html → network
+    event.respondWith(
+      caches.match(url.pathname).then(cached => {
+        if (cached) return cached;
+
+        // Try HTML fallback
+        const htmlFallback = url.pathname.endsWith('.html')
+          ? url.pathname
+          : `${url.pathname}.html`;
+
+        return caches.match(htmlFallback).then(foundHtml => {
+          return foundHtml || fetch(req).catch(() => caches.match('/index.html'));
+        });
+      })
+    );
+    return;
+  }
+
+  // ✔ Normal GET requests (CSS, JS, images…)
+  if (req.method === 'GET') {
+    event.respondWith(
+      caches.match(req).then(cached => {
+        return cached ||
+          fetch(req)
+            .then(res => {
+              if (res && res.status === 200) {
+                caches.open(CACHE_NAME).then(cache =>
+                  cache.put(req, res.clone())
+                );
+              }
+              return res;
+            })
+            .catch(() => cached);
+      })
+    );
+  }
+});
+
+/* ===============================
+   BACKGROUND TIMETABLE LOGIC (UNCHANGED)
+   =============================== */
+
 async function fetchTimetableFromClients(){
   try {
     const all = await self.clients.matchAll({ includeUncontrolled: true, type: 'window' });
@@ -44,7 +94,6 @@ async function fetchTimetableFromClients(){
       const resp = await new Promise(resolve => {
         channel.port1.onmessage = ev => resolve(ev.data);
         client.postMessage({cmd:'getTimetable'}, [channel.port2]);
-        // add timeout in case client doesn't respond
         setTimeout(()=> resolve(null), 3000);
       });
       if(resp && Array.isArray(resp)) return resp;
@@ -59,11 +108,7 @@ self.addEventListener('periodicsync', event => {
 self.addEventListener('sync', event => {
   if(event.tag === 'timetable-check') event.waitUntil(backgroundCheck());
 });
-
-// fallback: when push-like message from page triggers 'timetable' message, we may skip
-self.addEventListener('message', event => {
-  // no-op; kept for compatibility
-});
+self.addEventListener('message', event => {});
 
 async function backgroundCheck(){
   try {
@@ -71,12 +116,10 @@ async function backgroundCheck(){
     if(!data) return;
     const now = Date.now();
     for(const entry of data){
-      // compute next occurrence
       const [hh, mm] = (entry.startTime || '00:00').split(':').map(Number);
       const candidate = nextOccurrence(entry, now);
       const remindAt = candidate - (Number(entry.reminder || 10) * 60 * 1000);
       const diff = remindAt - now;
-      // if within next 30 minutes (and not already triggered), show notification
       if(diff <= 30*60*1000 && diff >= -60*1000){
         await self.registration.showNotification(`${entry.unit} — starting soon`, {
           body: `${entry.unit} by ${entry.lecturer || 'Lecturer'} at ${entry.startTime} · ${entry.venue||''}`,
