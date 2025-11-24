@@ -4,17 +4,10 @@ const CACHE_NAME = 'unit-timetable-cache-v3';
 const ASSETS = [
   '/',
   '/index.html',
-
-  // Add both HTML and extensionless routes
-  '/add',
   '/add.html',
-  '/timetable',
   '/timetable.html',
-  '/courses',
   '/courses.html',
-  '/notes',
   '/notes.html',
-
   '/styles.css',
   '/app.js',
   '/manifest.json',
